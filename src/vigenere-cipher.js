@@ -23,60 +23,58 @@ class VigenereCipheringMachine {
  
   constructor(isDirect = true) {
     this.isDirect = isDirect;
-    this.alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    this.square = this.initSquare();
-  }
-
-  initSquare() {
-    const alphabet = this.alphabet;
-    let resultSquare = [];
-    for(let i = 0; i < alphabet.length; i++) {
-      resultSquare.push(alphabet.slice(i).concat(alphabet.slice(0, i))); 
-    }
-    return resultSquare;
+    this.ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    this.ASCII_LETTER_NUM = 65;
+    this.ALPHABET_CHAR_COUNT = 26;
   }
 
   encrypt(message, key) {
+    this.checkArgs(message, key);
     return this.cryptAction(message, key, true);
   }
 
   decrypt(message, key) {
+    this.checkArgs(message, key);
     return this.cryptAction(message, key, false);
   }
 
-  cryptAction(message, key, action) {
+  checkArgs(message, key) {
     if(!message || !key) {
       throw new Error("Incorrect arguments!");
+    }
+  }
+
+  cryptAction(message, key, isEncrypt) {
+  
+    while (key.length < message.length) {
+      key += key;
     }
 
     message = message.toUpperCase();
     key = key.toUpperCase();
 
-    while (key.length < message.length) {
-      key += key;
-    }
-
-    let cryptResult = '';
+    let result = '';
     let keyIndex = 0;
 
-    for (let i = 0; i < message.length; i++) {
-      if (message[i] !== ' ' && this.alphabet.includes(message[i])) {
-        if (action) {
-          cryptResult += this.square[this.alphabet.indexOf(message[i])][this.alphabet.indexOf(key[keyIndex])];
+    message.split('').forEach((el, i) => {
+      if(el !== ' ' && this.ALPHABET.includes(el)) {
+        if(isEncrypt) {
+          result += String.fromCharCode(
+            (((message.charCodeAt(i) + key.charCodeAt(keyIndex)) - 2 * this.ASCII_LETTER_NUM) % this.ALPHABET_CHAR_COUNT) + this.ASCII_LETTER_NUM);
         } else {
-          cryptResult += this.alphabet[this.square[this.alphabet.indexOf(key[keyIndex])].indexOf(message[i])];
+          result += String.fromCharCode(
+            (((message.charCodeAt(i) - key.charCodeAt(keyIndex)) + this.ALPHABET_CHAR_COUNT) % this.ALPHABET_CHAR_COUNT) + this.ASCII_LETTER_NUM);
         }
         keyIndex++;
       } else {
-        cryptResult += message[i];
+        result += el;
       }
-    }
-   
-    if (!this.isDirect) {
-      return cryptResult.split('').reverse().join('');
-    }
+    });
 
-    return cryptResult;
+    if (!this.isDirect) {
+      return result.split('').reverse().join('');
+    }
+    return result;
   }
 }
 
